@@ -25,6 +25,7 @@ import {
   KeyRound,
   Shield,
   Cpu,
+  Gauge,
   LayoutDashboard,
 } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -90,6 +91,7 @@ import ToolsPanel from "@/components/openclaw/ToolsPanel";
 import AgentsDefaultsPanel from "@/components/openclaw/AgentsDefaultsPanel";
 import OpenClawHealthBanner from "@/components/openclaw/OpenClawHealthBanner";
 import HermesMemoryPanel from "@/components/hermes/HermesMemoryPanel";
+import CompanionToolsPanel from "@/components/companion/CompanionToolsPanel";
 
 type View =
   | "providers"
@@ -105,7 +107,8 @@ type View =
   | "openclawEnv"
   | "openclawTools"
   | "openclawAgents"
-  | "hermesMemory";
+  | "hermesMemory"
+  | "companionTools";
 
 interface SyncStatusUpdatedPayload {
   source?: string;
@@ -151,6 +154,7 @@ const VALID_VIEWS: View[] = [
   "openclawTools",
   "openclawAgents",
   "hermesMemory",
+  "companionTools",
 ];
 
 const getInitialView = (): View => {
@@ -284,6 +288,17 @@ function App() {
     sharedFeatureApp === "openclaw" ||
     sharedFeatureApp === "gemini" ||
     sharedFeatureApp === "hermes";
+  const hasCompanionToolsSupport =
+    sharedFeatureApp === "claude" ||
+    sharedFeatureApp === "codex" ||
+    sharedFeatureApp === "gemini" ||
+    sharedFeatureApp === "opencode";
+
+  useEffect(() => {
+    if (currentView === "companionTools" && !hasCompanionToolsSupport) {
+      setCurrentView("providers");
+    }
+  }, [currentView, hasCompanionToolsSupport]);
 
   const {
     addProvider,
@@ -906,6 +921,12 @@ function App() {
               onOpenChange={() => setCurrentView("providers")}
             />
           );
+        case "companionTools":
+          return (
+            <CompanionToolsPanel
+              onOpenChange={() => setCurrentView("providers")}
+            />
+          );
         case "agents":
           return (
             <AgentsPanel onOpenChange={() => setCurrentView("providers")} />
@@ -1142,6 +1163,7 @@ function App() {
                   {currentView === "skills" && t("skills.title")}
                   {currentView === "skillsDiscovery" && t("skills.title")}
                   {currentView === "mcp" && t("mcp.unifiedPanel.title")}
+                  {currentView === "companionTools" && t("companionTools.title")}
                   {currentView === "agents" && t("agents.title")}
                   {currentView === "universal" &&
                     t("universalProvider.title", {
@@ -1503,6 +1525,21 @@ function App() {
                                 title={t("mcp.title")}
                               >
                                 <McpIcon size={16} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setCurrentView("companionTools")}
+                                className={cn(
+                                  "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5",
+                                  "transition-all duration-200 ease-in-out overflow-hidden",
+                                  hasCompanionToolsSupport
+                                    ? "opacity-100 w-8 scale-100 px-2"
+                                    : "opacity-0 w-0 scale-75 pointer-events-none px-0 -ml-1",
+                                )}
+                                title={t("companionTools.title")}
+                              >
+                                <Gauge className="flex-shrink-0 w-4 h-4" />
                               </Button>
                             </>
                           )}

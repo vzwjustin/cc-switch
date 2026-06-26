@@ -2,6 +2,7 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import i18n from "i18next";
 import { useSettingsForm } from "@/hooks/useSettingsForm";
+import type { Settings } from "@/types";
 
 const useSettingsQueryMock = vi.fn();
 
@@ -14,7 +15,7 @@ let changeLanguageSpy: ReturnType<typeof vi.spyOn<any, any>>;
 beforeEach(() => {
   useSettingsQueryMock.mockReset();
   window.localStorage.clear();
-  (i18n as any).language = "zh";
+  (i18n as any).language = "ja";
   changeLanguageSpy = vi
     .spyOn(i18n, "changeLanguage")
     .mockImplementation(async (lang?: string) => {
@@ -58,7 +59,7 @@ describe("useSettingsForm Hook", () => {
     expect(changeLanguageSpy).toHaveBeenCalledWith("en");
   });
 
-  it("should support japanese language preference from server data", async () => {
+  it("should always normalize legacy language values to English", async () => {
     useSettingsQueryMock.mockReturnValue({
       data: {
         showInTray: true,
@@ -74,42 +75,19 @@ describe("useSettingsForm Hook", () => {
     const { result } = renderHook(() => useSettingsForm());
 
     await waitFor(() => {
-      expect(result.current.settings?.language).toBe("ja");
+      expect(result.current.settings?.language).toBe("en");
     });
 
-    expect(result.current.initialLanguage).toBe("ja");
-    expect(changeLanguageSpy).toHaveBeenCalledWith("ja");
+    expect(result.current.initialLanguage).toBe("en");
+    expect(changeLanguageSpy).toHaveBeenCalledWith("en");
   });
 
-  it("should support traditional chinese language preference aliases", async () => {
-    useSettingsQueryMock.mockReturnValue({
-      data: {
-        showInTray: true,
-        minimizeToTrayOnClose: true,
-        enableClaudePluginIntegration: false,
-        claudeConfigDir: "/Users/demo",
-        codexConfigDir: null,
-        language: "zh-Hant",
-      },
-      isLoading: false,
-    });
-
-    const { result } = renderHook(() => useSettingsForm());
-
-    await waitFor(() => {
-      expect(result.current.settings?.language).toBe("zh-TW");
-    });
-
-    expect(result.current.initialLanguage).toBe("zh-TW");
-    expect(changeLanguageSpy).toHaveBeenCalledWith("zh-TW");
-  });
-
-  it("should prioritize reading language from local storage in readPersistedLanguage", () => {
+  it("should always return English from readPersistedLanguage", () => {
     useSettingsQueryMock.mockReturnValue({
       data: null,
       isLoading: false,
     });
-    window.localStorage.setItem("language", "en");
+    window.localStorage.setItem("language", "ja");
 
     const { result } = renderHook(() => useSettingsForm());
 
@@ -118,7 +96,7 @@ describe("useSettingsForm Hook", () => {
     expect(changeLanguageSpy).not.toHaveBeenCalled();
   });
 
-  it("should update fields and sync language when language changes in updateSettings", () => {
+  it("should keep language as English when updating settings", () => {
     useSettingsQueryMock.mockReturnValue({
       data: null,
       isLoading: false,
@@ -131,14 +109,7 @@ describe("useSettingsForm Hook", () => {
     });
 
     expect(result.current.settings?.showInTray).toBe(false);
-
-    changeLanguageSpy.mockClear();
-    act(() => {
-      result.current.updateSettings({ language: "en" });
-    });
-
     expect(result.current.settings?.language).toBe("en");
-    expect(changeLanguageSpy).toHaveBeenCalledWith("en");
   });
 
   it("should reset with server data and restore initial language in resetSettings", async () => {
@@ -161,7 +132,7 @@ describe("useSettingsForm Hook", () => {
     });
 
     changeLanguageSpy.mockClear();
-    (i18n as any).language = "zh";
+    (i18n as any).language = "ja";
 
     act(() => {
       result.current.resetSettings({
@@ -171,7 +142,7 @@ describe("useSettingsForm Hook", () => {
         claudeConfigDir: "  /reset  ",
         codexConfigDir: "   ",
         language: "zh",
-      });
+      } as unknown as Settings);
     });
 
     const settings = result.current.settings!;
@@ -180,12 +151,12 @@ describe("useSettingsForm Hook", () => {
     expect(settings.enableClaudePluginIntegration).toBe(true);
     expect(settings.claudeConfigDir).toBe("/reset");
     expect(settings.codexConfigDir).toBeUndefined();
-    expect(settings.language).toBe("zh");
+    expect(settings.language).toBe("en");
     expect(result.current.initialLanguage).toBe("en");
     expect(changeLanguageSpy).toHaveBeenCalledWith("en");
   });
 
-  it("should not call changeLanguage repeatedly when language is consistent in syncLanguage", async () => {
+  it("should not call changeLanguage repeatedly when language is already English", async () => {
     useSettingsQueryMock.mockReturnValue({
       data: {
         showInTray: true,
@@ -193,7 +164,7 @@ describe("useSettingsForm Hook", () => {
         enableClaudePluginIntegration: false,
         claudeConfigDir: null,
         codexConfigDir: null,
-        language: "zh",
+        language: "en",
       },
       isLoading: false,
     });
@@ -205,10 +176,10 @@ describe("useSettingsForm Hook", () => {
     });
 
     changeLanguageSpy.mockClear();
-    (i18n as any).language = "zh";
+    (i18n as any).language = "en";
 
     act(() => {
-      result.current.syncLanguage("zh");
+      result.current.syncLanguage("en");
     });
 
     expect(changeLanguageSpy).not.toHaveBeenCalled();

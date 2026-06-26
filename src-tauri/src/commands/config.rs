@@ -7,7 +7,6 @@ use tauri_plugin_opener::OpenerExt;
 use crate::app_config::AppType;
 use crate::codex_config;
 use crate::config::{self, get_claude_settings_path, ConfigStatus};
-use crate::settings;
 use crate::store::AppState;
 
 #[tauri::command]
@@ -18,27 +17,11 @@ pub async fn get_claude_config_status() -> Result<ConfigStatus, String> {
 use std::str::FromStr;
 
 fn invalid_json_format_error(error: serde_json::Error) -> String {
-    let lang = settings::get_settings()
-        .language
-        .unwrap_or_else(|| "zh".to_string());
-
-    match lang.as_str() {
-        "en" => format!("Invalid JSON format: {error}"),
-        "ja" => format!("JSON形式が無効です: {error}"),
-        _ => format!("无效的 JSON 格式: {error}"),
-    }
+    format!("Invalid JSON format: {error}")
 }
 
 fn invalid_toml_format_error(error: toml_edit::TomlError) -> String {
-    let lang = settings::get_settings()
-        .language
-        .unwrap_or_else(|| "zh".to_string());
-
-    match lang.as_str() {
-        "en" => format!("Invalid TOML format: {error}"),
-        "ja" => format!("TOML形式が無効です: {error}"),
-        _ => format!("无效的 TOML 格式: {error}"),
-    }
+    format!("Invalid TOML format: {error}")
 }
 
 fn validate_common_config_snippet(app_type: &str, snippet: &str) -> Result<(), String> {

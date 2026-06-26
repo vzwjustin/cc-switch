@@ -360,8 +360,8 @@ export interface Settings {
   autoSyncConfirmed?: boolean;
   // User has confirmed the common config first-run notice
   commonConfigConfirmed?: boolean;
-  // 首选语言（可选，默认中文）
-  language?: "en" | "zh" | "zh-TW" | "ja";
+  // Preferred language (optional, English only)
+  language?: "en";
 
   // 主页面显示的应用（默认全部显示）
   visibleApps?: VisibleApps;

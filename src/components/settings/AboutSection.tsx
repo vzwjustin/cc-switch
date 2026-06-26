@@ -67,6 +67,9 @@ const TOOL_NAMES = [
   "opencode",
   "openclaw",
   "hermes",
+  "ponytail",
+  "rtk",
+  "headroom",
 ] as const;
 type ToolName = (typeof TOOL_NAMES)[number];
 type ToolLifecycleAction = "install" | "update";
@@ -136,7 +139,13 @@ ${posixScriptInstallCommand("https://opencode.ai/install")} || npm i -g opencode
 # OpenClaw
 npm i -g openclaw@latest
 # Hermes
-${posixScriptInstallCommand("https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh")}`;
+${posixScriptInstallCommand("https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh")}
+# Pony Tail
+npm i -g @dietrichgebert/ponytail@latest
+# RTK
+${posixScriptInstallCommand("https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh")}
+# Headroom
+python3 -m pip install "headroom-ai[all]" --upgrade`;
 
 const WINDOWS_ONE_CLICK_INSTALL_COMMANDS = `# Claude Code
 npm i -g @anthropic-ai/claude-code@latest
@@ -149,7 +158,13 @@ npm i -g opencode-ai@latest
 # OpenClaw
 npm i -g openclaw@latest
 # Hermes
-${HERMES_WINDOWS_INSTALL_COMMAND}`;
+${HERMES_WINDOWS_INSTALL_COMMAND}
+# Pony Tail
+npm i -g @dietrichgebert/ponytail@latest
+# RTK
+cargo install --git https://github.com/rtk-ai/rtk --force
+# Headroom
+py -m pip install "headroom-ai[all]" --upgrade`;
 
 const ONE_CLICK_INSTALL_COMMANDS = isWindows()
   ? WINDOWS_ONE_CLICK_INSTALL_COMMANDS
@@ -162,6 +177,9 @@ const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
   opencode: "OpenCode",
   openclaw: "OpenClaw",
   hermes: "Hermes",
+  ponytail: "Pony Tail",
+  rtk: "RTK",
+  headroom: "Headroom",
 };
 
 // 后端返回的 tool 是 string；这里收敛唯一的 ToolName 断言与兜底，供升级确认
@@ -170,7 +188,7 @@ function toolDisplayName(tool: string): string {
   return TOOL_DISPLAY_NAMES[tool as ToolName] ?? tool;
 }
 
-const TOOL_APP_IDS: Record<ToolName, AppId> = {
+const TOOL_APP_IDS: Partial<Record<ToolName, AppId>> = {
   claude: "claude",
   codex: "codex",
   gemini: "gemini",
@@ -1008,7 +1026,8 @@ export function AboutSection({ isPortable }: AboutSectionProps) {
         <div className="grid gap-3 px-1 sm:grid-cols-2 xl:grid-cols-3">
           {TOOL_NAMES.map((toolName, index) => {
             const tool = toolVersionByName.get(toolName);
-            const appConfig = APP_ICON_MAP[TOOL_APP_IDS[toolName]];
+            const appId = TOOL_APP_IDS[toolName];
+            const appConfig = appId ? APP_ICON_MAP[appId] : undefined;
             const displayName = TOOL_DISPLAY_NAMES[toolName];
             // 单卡片 loading 用「结果是否已到」而非「整批是否结束」驱动，实现渐进式刷新：
             //   - loadingTools[t]：本工具探测在途（首次加载或单工具刷新）；
