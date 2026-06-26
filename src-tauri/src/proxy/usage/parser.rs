@@ -51,16 +51,6 @@ impl TokenUsage {
     }
 }
 
-/// API 类型
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[allow(dead_code)]
-pub enum ApiType {
-    Claude,
-    OpenRouter,
-    Codex,
-    Gemini,
-}
-
 impl TokenUsage {
     /// 从 Claude API 非流式响应解析
     pub fn from_claude_response(body: &Value) -> Option<Self> {
@@ -319,24 +309,6 @@ impl TokenUsage {
     }
 
     /// 从 Codex API 流式响应解析
-    #[allow(dead_code)]
-    pub fn from_codex_stream_events(events: &[Value]) -> Option<Self> {
-        log::debug!("[Codex] 解析流式事件，共 {} 个事件", events.len());
-        for event in events {
-            if let Some(event_type) = event.get("type").and_then(|v| v.as_str()) {
-                log::debug!("[Codex] 事件类型: {event_type}");
-                if event_type == "response.completed" {
-                    if let Some(response) = event.get("response") {
-                        log::debug!("[Codex] 找到 response.completed 事件，解析 usage");
-                        return Self::from_codex_response_adjusted(response);
-                    }
-                }
-            }
-        }
-        log::debug!("[Codex] 未找到 response.completed 事件");
-        None
-    }
-
     /// 智能 Codex 响应解析 - 自动检测 OpenAI 或 Codex 格式
     ///
     /// Codex 支持两种 API 格式：

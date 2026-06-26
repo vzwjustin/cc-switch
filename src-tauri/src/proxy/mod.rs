@@ -22,7 +22,6 @@ pub mod media_sanitizer;
 pub mod model_mapper;
 pub mod provider_router;
 pub mod providers;
-pub mod response_handler;
 pub mod response_processor;
 pub(crate) mod server;
 pub mod session;
@@ -44,10 +43,8 @@ pub use error::ProxyError;
 #[allow(unused_imports)]
 pub use provider_router::ProviderRouter;
 #[allow(unused_imports)]
-pub use response_handler::{NonStreamHandler, ResponseType, StreamHandler};
-#[allow(unused_imports)]
 pub use session::{
-    extract_session_id, ClientFormat, ProxySession, SessionIdResult, SessionIdSource,
+    extract_session_id, SessionIdResult, SessionIdSource,
 };
 #[allow(unused_imports)]
 pub use types::{ProxyConfig, ProxyServerInfo, ProxyStatus};
