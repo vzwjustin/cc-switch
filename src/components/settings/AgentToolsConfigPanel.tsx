@@ -20,6 +20,7 @@ export function AgentToolsConfigPanel() {
     rtkEnabled: false,
     rtkClaude: true,
     rtkCodex: true,
+    rtkOpencode: true,
     ponytailEnabled: false,
     ponytailMode: "full",
     ponytailInstallSkill: false,
@@ -184,6 +185,16 @@ export function AgentToolsConfigPanel() {
               disabled={!config.rtkEnabled}
               onCheckedChange={(checked) =>
                 handleChange({ rtkCodex: checked })
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label>{t("settings.advanced.agentTools.rtk.opencode")}</Label>
+            <Switch
+              checked={config.rtkOpencode}
+              disabled={!config.rtkEnabled}
+              onCheckedChange={(checked) =>
+                handleChange({ rtkOpencode: checked })
               }
             />
           </div>

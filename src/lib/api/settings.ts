@@ -360,6 +360,7 @@ export interface AgentToolsConfig {
   rtkEnabled: boolean;
   rtkClaude: boolean;
   rtkCodex: boolean;
+  rtkOpencode: boolean;
   ponytailEnabled: boolean;
   ponytailMode: string;
   ponytailInstallSkill: boolean;

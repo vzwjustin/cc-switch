@@ -409,7 +409,7 @@
         "stopped": "Not running",
         "headroom": {
           "enabled": "Headroom",
-          "enabledDescription": "Compress tool outputs and context before they reach the model. With proxy takeover, CC Switch chains outbound traffic through Headroom; otherwise live configs point agents at the local proxy.",
+          "enabledDescription": "Compress tool outputs and context before they reach the model. With proxy takeover, CC Switch chains outbound traffic through Headroom; otherwise live configs point agents at the local proxy. OpenCode providers use options.baseURL.",
           "port": "Proxy port",
           "autoStart": "Auto-start proxy",
           "autoStartDescription": "Run `headroom proxy` when enabled (requires headroom on PATH)"
@@ -418,11 +418,12 @@
           "enabled": "RTK",
           "enabledDescription": "Rewrite shell commands to compact RTK equivalents for smaller CLI output (requires rtk on PATH)",
           "claude": "Claude Code hooks",
-          "codex": "Codex env marker"
+          "codex": "Codex env marker",
+          "opencode": "OpenCode plugin"
         },
         "ponytail": {
           "enabled": "Ponytail",
-          "enabledDescription": "Inject lazy-senior-dev rules via PONYTAIL_DEFAULT_MODE in live agent configs",
+          "enabledDescription": "Inject lazy-senior-dev rules via PONYTAIL_DEFAULT_MODE (Claude/Codex/Gemini) or the Ponytail OpenCode plugin",
           "mode": "Default mode",
           "installSkill": "Prefer skill install",
           "installSkillDescription": "Log a reminder to install the Ponytail skill from the Skills page when missing",

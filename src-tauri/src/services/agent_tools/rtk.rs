@@ -43,6 +43,7 @@ pub fn apply_rtk_to_settings(
     match app_type {
         AppType::Claude if config.rtk_claude => inject_claude_rtk_hook(settings),
         AppType::Codex if config.rtk_codex => inject_codex_rtk_env(settings),
+        AppType::OpenCode if config.rtk_opencode => settings.clone(),
         _ => settings.clone(),
     }
 }

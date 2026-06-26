@@ -265,3 +265,18 @@ pub fn remove_plugins_by_prefixes(prefixes: &[&str]) -> Result<(), AppError> {
 
     write_opencode_config(&config)
 }
+
+/// Remove a single exact plugin entry from opencode.json.
+pub fn remove_plugin_exact(plugin_name: &str) -> Result<(), AppError> {
+    let mut config = read_opencode_config()?;
+    let normalized_plugin_name = canonicalize_plugin_name(plugin_name);
+
+    if let Some(arr) = config.get_mut("plugin").and_then(|v| v.as_array_mut()) {
+        arr.retain(|v| v.as_str() != Some(normalized_plugin_name.as_str()));
+        if arr.is_empty() {
+            config.as_object_mut().map(|obj| obj.remove("plugin"));
+        }
+    }
+
+    write_opencode_config(&config)
+}

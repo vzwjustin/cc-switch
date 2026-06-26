@@ -1,6 +1,7 @@
 //! Agent optimization tools integration (Headroom, RTK, Ponytail).
 
 mod headroom;
+mod opencode;
 mod ponytail;
 mod rtk;
 
@@ -70,7 +71,16 @@ pub fn apply_config(state: &AppState, config: &AgentToolsConfig) -> Result<(), A
         }
     }
 
-    for app_type in [AppType::Claude, AppType::Codex, AppType::Gemini] {
+    if let Err(err) = opencode::sync_opencode_global(config) {
+        log::warn!("Failed to sync OpenCode agent tools: {err}");
+    }
+
+    for app_type in [
+        AppType::Claude,
+        AppType::Codex,
+        AppType::Gemini,
+        AppType::OpenCode,
+    ] {
         if let Err(err) = sync_current_provider_for_app_to_live(state, &app_type) {
             log::warn!("Failed to re-sync {:?} live config after agent tools change: {err}", app_type);
         }

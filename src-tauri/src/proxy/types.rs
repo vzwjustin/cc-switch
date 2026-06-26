@@ -376,6 +376,9 @@ pub struct AgentToolsConfig {
     /// Apply RTK integration for Codex live config.
     #[serde(default = "default_true")]
     pub rtk_codex: bool,
+    /// Apply RTK integration for OpenCode (local plugin in ~/.config/opencode/plugins).
+    #[serde(default = "default_true")]
+    pub rtk_opencode: bool,
     /// Inject Ponytail rules via env and optional skill install.
     #[serde(default)]
     pub ponytail_enabled: bool,
@@ -396,6 +399,7 @@ impl Default for AgentToolsConfig {
             rtk_enabled: false,
             rtk_claude: true,
             rtk_codex: true,
+            rtk_opencode: true,
             ponytail_enabled: false,
             ponytail_mode: default_ponytail_mode(),
             ponytail_install_skill: false,

@@ -154,6 +154,45 @@ pub fn apply_headroom_to_live_settings(
                 );
             }
         }
+        AppType::OpenCode => {
+            if let Some(obj) = value.as_object_mut() {
+                let options = obj
+                    .entry("options")
+                    .or_insert_with(|| json!({}))
+                    .as_object_mut()
+                    .expect("opencode options object");
+
+                if let Some(original) = options
+                    .get("baseURL")
+                    .or_else(|| options.get("baseUrl"))
+                    .and_then(Value::as_str)
+                    .map(str::trim)
+                    .filter(|url| !url.is_empty())
+                    .map(str::to_string)
+                {
+                    if !original.starts_with(&proxy_url) {
+                        let headers = options
+                            .entry("headers")
+                            .or_insert_with(|| json!({}))
+                            .as_object_mut()
+                            .expect("opencode headers object");
+                        headers.insert(
+                            "x-headroom-base-url".to_string(),
+                            Value::String(original.trim_end_matches('/').to_string()),
+                        );
+                        options.insert(
+                            "baseURL".to_string(),
+                            Value::String(format!("{proxy_url}/v1")),
+                        );
+                    }
+                } else {
+                    options.insert(
+                        "baseURL".to_string(),
+                        Value::String(format!("{proxy_url}/v1")),
+                    );
+                }
+            }
+        }
         _ => {}
     }
 
@@ -185,6 +224,17 @@ pub fn remove_headroom_from_live_settings(app_type: &AppType, settings: &Value) 
                 .and_then(Value::as_object_mut)
             {
                 env.remove("GOOGLE_GEMINI_BASE_URL");
+            }
+        }
+        AppType::OpenCode => {
+            if let Some(options) = value.get_mut("options").and_then(Value::as_object_mut) {
+                if let Some(headers) = options.get_mut("headers").and_then(Value::as_object_mut) {
+                    headers.remove("x-headroom-base-url");
+                    if headers.is_empty() {
+                        options.remove("headers");
+                    }
+                }
+                // baseURL is restored from the DB provider on the next sync.
             }
         }
         _ => {}
@@ -255,6 +305,30 @@ mod tests {
         assert_eq!(
             out,
             "http://127.0.0.1:8787/v1/messages?beta=true"
+        );
+    }
+
+    #[test]
+    fn opencode_headroom_sets_base_url_and_upstream_header() {
+        let config = AgentToolsConfig {
+            headroom_enabled: true,
+            headroom_port: 8787,
+            ..AgentToolsConfig::default()
+        };
+        let settings = json!({
+            "npm": "@ai-sdk/openai-compatible",
+            "options": {
+                "baseURL": "https://api.example.com/v1"
+            }
+        });
+        let out = apply_headroom_to_live_settings(&AppType::OpenCode, &settings, &config);
+        assert_eq!(
+            out["options"]["baseURL"].as_str(),
+            Some("http://127.0.0.1:8787/v1")
+        );
+        assert_eq!(
+            out["options"]["headers"]["x-headroom-base-url"].as_str(),
+            Some("https://api.example.com/v1")
         );
     }
 }
