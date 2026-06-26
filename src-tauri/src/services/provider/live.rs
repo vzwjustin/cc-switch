@@ -515,6 +515,17 @@ pub(crate) fn write_live_with_common_config(
     effective_provider.settings_config =
         build_effective_settings_with_common_config(db, app_type, provider)?;
 
+    let agent_tools = db.get_agent_tools_config().unwrap_or_default();
+    let proxy_takeover_active = db
+        .get_proxy_takeover_enabled(app_type.as_str())
+        .unwrap_or(false);
+    effective_provider.settings_config = crate::services::agent_tools::apply_to_provider_settings(
+        app_type,
+        &effective_provider.settings_config,
+        &agent_tools,
+        proxy_takeover_active,
+    );
+
     if matches!(app_type, AppType::ClaudeDesktop) {
         crate::claude_desktop_config::apply_provider(db, &effective_provider)?;
         log::info!(

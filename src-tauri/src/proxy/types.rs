@@ -344,6 +344,90 @@ impl Default for CopilotOptimizerConfig {
     }
 }
 
+fn default_headroom_port() -> u16 {
+    8787
+}
+
+fn default_ponytail_mode() -> String {
+    "full".to_string()
+}
+
+/// Agent optimization tools configuration (Headroom, RTK, Ponytail).
+///
+/// Stored in the settings table under key `agent_tools_config`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentToolsConfig {
+    /// Route outbound proxy traffic through a local Headroom proxy.
+    #[serde(default)]
+    pub headroom_enabled: bool,
+    /// Headroom proxy listen port.
+    #[serde(default = "default_headroom_port")]
+    pub headroom_port: u16,
+    /// Spawn `headroom proxy` when enabled and the binary is available.
+    #[serde(default)]
+    pub headroom_auto_start: bool,
+    /// Rewrite shell commands via RTK hooks / env markers.
+    #[serde(default)]
+    pub rtk_enabled: bool,
+    /// Apply RTK integration for Claude Code live config.
+    #[serde(default = "default_true")]
+    pub rtk_claude: bool,
+    /// Apply RTK integration for Codex live config.
+    #[serde(default = "default_true")]
+    pub rtk_codex: bool,
+    /// Inject Ponytail rules via env and optional skill install.
+    #[serde(default)]
+    pub ponytail_enabled: bool,
+    /// Ponytail intensity: lite | full | ultra | off.
+    #[serde(default = "default_ponytail_mode")]
+    pub ponytail_mode: String,
+    /// Install the Ponytail skill into the CC Switch skills store when missing.
+    #[serde(default)]
+    pub ponytail_install_skill: bool,
+}
+
+impl Default for AgentToolsConfig {
+    fn default() -> Self {
+        Self {
+            headroom_enabled: false,
+            headroom_port: default_headroom_port(),
+            headroom_auto_start: false,
+            rtk_enabled: false,
+            rtk_claude: true,
+            rtk_codex: true,
+            ponytail_enabled: false,
+            ponytail_mode: default_ponytail_mode(),
+            ponytail_install_skill: false,
+        }
+    }
+}
+
+/// Runtime status for external agent optimization tools.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentToolsStatus {
+    pub headroom_installed: bool,
+    pub headroom_running: bool,
+    pub headroom_version: Option<String>,
+    pub rtk_installed: bool,
+    pub rtk_version: Option<String>,
+    pub ponytail_skill_installed: bool,
+}
+
+impl Default for AgentToolsStatus {
+    fn default() -> Self {
+        Self {
+            headroom_installed: false,
+            headroom_running: false,
+            headroom_version: None,
+            rtk_installed: false,
+            rtk_version: None,
+            ponytail_skill_installed: false,
+        }
+    }
+}
+
 /// 日志配置
 ///
 /// 存储在 settings 表的 log_config 字段中（JSON 格式）

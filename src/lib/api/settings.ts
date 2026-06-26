@@ -299,6 +299,18 @@ export const settingsApi = {
   async setLogConfig(config: LogConfig): Promise<boolean> {
     return await invoke("set_log_config", { config });
   },
+
+  async getAgentToolsConfig(): Promise<AgentToolsConfig> {
+    return await invoke("get_agent_tools_config");
+  },
+
+  async setAgentToolsConfig(config: AgentToolsConfig): Promise<boolean> {
+    return await invoke("set_agent_tools_config", { config });
+  },
+
+  async getAgentToolsStatus(): Promise<AgentToolsStatus> {
+    return await invoke("get_agent_tools_status");
+  },
 };
 
 /** 单处工具安装的诊断信息（多处安装冲突检测）。字段对应后端 ToolInstallation。 */
@@ -339,6 +351,27 @@ export interface OptimizerConfig {
 export interface LogConfig {
   enabled: boolean;
   level: "error" | "warn" | "info" | "debug" | "trace";
+}
+
+export interface AgentToolsConfig {
+  headroomEnabled: boolean;
+  headroomPort: number;
+  headroomAutoStart: boolean;
+  rtkEnabled: boolean;
+  rtkClaude: boolean;
+  rtkCodex: boolean;
+  ponytailEnabled: boolean;
+  ponytailMode: string;
+  ponytailInstallSkill: boolean;
+}
+
+export interface AgentToolsStatus {
+  headroomInstalled: boolean;
+  headroomRunning: boolean;
+  headroomVersion: string | null;
+  rtkInstalled: boolean;
+  rtkVersion: string | null;
+  ponytailSkillInstalled: boolean;
 }
 
 export interface BackupEntry {

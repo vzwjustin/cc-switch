@@ -727,3 +727,45 @@ pub async fn set_log_config(
     );
     Ok(true)
 }
+
+/// Get agent optimization tools configuration (Headroom, RTK, Ponytail).
+#[tauri::command]
+pub async fn get_agent_tools_config(
+    state: tauri::State<'_, crate::AppState>,
+) -> Result<crate::proxy::types::AgentToolsConfig, String> {
+    state
+        .db
+        .get_agent_tools_config()
+        .map_err(|e| e.to_string())
+}
+
+/// Update agent optimization tools configuration and re-sync live configs.
+#[tauri::command]
+pub async fn set_agent_tools_config(
+    state: tauri::State<'_, crate::AppState>,
+    config: crate::proxy::types::AgentToolsConfig,
+) -> Result<bool, String> {
+    match config.ponytail_mode.as_str() {
+        "lite" | "full" | "ultra" | "off" => {}
+        other => {
+            return Err(format!(
+                "Invalid ponytail_mode value: '{other}'. Allowed: lite, full, ultra, off"
+            ));
+        }
+    }
+
+    if config.headroom_port == 0 {
+        return Err("headroom_port must be greater than 0".to_string());
+    }
+
+    crate::services::agent_tools::apply_config(state.inner(), &config).map_err(|e| e.to_string())?;
+    Ok(true)
+}
+
+/// Probe installed/running status for external agent tools.
+#[tauri::command]
+pub async fn get_agent_tools_status(
+    state: tauri::State<'_, crate::AppState>,
+) -> Result<crate::proxy::types::AgentToolsStatus, String> {
+    Ok(crate::services::agent_tools::probe_status(state.db.as_ref()))
+}

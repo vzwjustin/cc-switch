@@ -19,7 +19,9 @@ use super::{
     thinking_rectifier::{
         normalize_thinking_type, rectify_anthropic_request, should_rectify_thinking_signature,
     },
-    types::{CopilotOptimizerConfig, OptimizerConfig, ProxyStatus, RectifierConfig},
+    types::{
+        AgentToolsConfig, CopilotOptimizerConfig, OptimizerConfig, ProxyStatus, RectifierConfig,
+    },
     ProxyError,
 };
 use crate::commands::{CodexOAuthState, CopilotAuthState};
@@ -119,6 +121,8 @@ pub struct RequestForwarder {
     optimizer_config: OptimizerConfig,
     /// Copilot 优化器配置
     copilot_optimizer_config: CopilotOptimizerConfig,
+    /// Agent optimization tools (Headroom / RTK / Ponytail)
+    agent_tools_config: AgentToolsConfig,
     /// 非流式请求超时（秒）
     non_streaming_timeout: std::time::Duration,
     /// 流式请求响应头等待超时（秒）
@@ -197,6 +201,7 @@ impl RequestForwarder {
         rectifier_config: RectifierConfig,
         optimizer_config: OptimizerConfig,
         copilot_optimizer_config: CopilotOptimizerConfig,
+        agent_tools_config: AgentToolsConfig,
         max_retries: u32,
         auto_failover_enabled: bool,
     ) -> Self {
@@ -217,6 +222,7 @@ impl RequestForwarder {
             rectifier_config,
             optimizer_config,
             copilot_optimizer_config,
+            agent_tools_config,
             non_streaming_timeout: std::time::Duration::from_secs(non_streaming_timeout),
             streaming_first_byte_timeout: std::time::Duration::from_secs(
                 streaming_first_byte_timeout,
@@ -1295,7 +1301,7 @@ impl RequestForwarder {
                 .to_ascii_lowercase()
                 .ends_with("/chat/completions");
 
-        let url = if matches!(resolved_claude_api_format.as_deref(), Some("gemini_native")) {
+        let mut url = if matches!(resolved_claude_api_format.as_deref(), Some("gemini_native")) {
             super::gemini_url::resolve_gemini_native_url(
                 &base_url,
                 &effective_endpoint,
@@ -1306,6 +1312,25 @@ impl RequestForwarder {
         } else {
             adapter.build_url(&base_url, &effective_endpoint)
         };
+
+        let mut headroom_upstream_header: Option<(String, String)> = None;
+        if self.agent_tools_config.headroom_enabled {
+            if self.agent_tools_config.headroom_auto_start {
+                if let Err(err) =
+                    crate::services::agent_tools::ensure_headroom_proxy(self.agent_tools_config.headroom_port)
+                {
+                    log::warn!("Headroom auto-start failed: {err}");
+                }
+            }
+            let (chained, header) = crate::services::agent_tools::chain_url_through_headroom(
+                &url,
+                &base_url,
+                self.agent_tools_config.headroom_port,
+            );
+            url = chained;
+            headroom_upstream_header = header;
+            log::debug!("[Headroom] Chained upstream through {}", url);
+        }
 
         // 记录映射后的出站模型名（此时 mapped_body 已完成接管映射 / [1m] 剥离 /
         // Copilot 归一化）。格式转换后若 body 仍带 model 字段会在下方刷新覆盖；
@@ -1793,6 +1818,16 @@ impl RequestForwarder {
                 "anthropic-version",
                 http::HeaderValue::from_static("2023-06-01"),
             );
+        }
+
+        if let Some((header_name, header_value)) = headroom_upstream_header {
+            if let Ok(value) = http::HeaderValue::from_str(&header_value) {
+                ordered_headers.insert(
+                    http::HeaderName::from_bytes(header_name.as_bytes())
+                        .unwrap_or(http::HeaderName::from_static("x-headroom-base-url")),
+                    value,
+                );
+            }
         }
 
         // Codex OAuth 反代尽量对齐官方 Codex CLI 的会话路由信号。
@@ -2812,6 +2847,7 @@ mod tests {
             rectifier_config: RectifierConfig::default(),
             optimizer_config: OptimizerConfig::default(),
             copilot_optimizer_config: CopilotOptimizerConfig::default(),
+            agent_tools_config: AgentToolsConfig::default(),
             non_streaming_timeout,
             streaming_first_byte_timeout,
             max_attempts: 1,

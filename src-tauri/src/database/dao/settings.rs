@@ -324,4 +324,25 @@ impl Database {
             .map_err(|e| AppError::Database(format!("序列化日志配置失败: {e}")))?;
         self.set_setting("log_config", &json)
     }
+
+    // --- Agent tools (Headroom / RTK / Ponytail) ---
+
+    pub fn get_agent_tools_config(
+        &self,
+    ) -> Result<crate::proxy::types::AgentToolsConfig, AppError> {
+        match self.get_setting("agent_tools_config")? {
+            Some(json) => serde_json::from_str(&json)
+                .map_err(|e| AppError::Database(format!("Failed to parse agent tools config: {e}"))),
+            None => Ok(crate::proxy::types::AgentToolsConfig::default()),
+        }
+    }
+
+    pub fn set_agent_tools_config(
+        &self,
+        config: &crate::proxy::types::AgentToolsConfig,
+    ) -> Result<(), AppError> {
+        let json = serde_json::to_string(config)
+            .map_err(|e| AppError::Database(format!("Failed to serialize agent tools config: {e}")))?;
+        self.set_setting("agent_tools_config", &json)
+    }
 }

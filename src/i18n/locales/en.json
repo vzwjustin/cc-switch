@@ -400,6 +400,41 @@
         "cacheTtl5m": "5 minutes",
         "cacheTtl1h": "1 hour"
       },
+      "agentTools": {
+        "title": "Agent Optimization Tools",
+        "description": "Integrate Headroom, RTK, and Ponytail to reduce token usage for coding agents",
+        "installed": "Installed",
+        "notInstalled": "Not on PATH",
+        "running": "Running",
+        "stopped": "Not running",
+        "headroom": {
+          "enabled": "Headroom",
+          "enabledDescription": "Compress tool outputs and context before they reach the model. With proxy takeover, CC Switch chains outbound traffic through Headroom; otherwise live configs point agents at the local proxy.",
+          "port": "Proxy port",
+          "autoStart": "Auto-start proxy",
+          "autoStartDescription": "Run `headroom proxy` when enabled (requires headroom on PATH)"
+        },
+        "rtk": {
+          "enabled": "RTK",
+          "enabledDescription": "Rewrite shell commands to compact RTK equivalents for smaller CLI output (requires rtk on PATH)",
+          "claude": "Claude Code hooks",
+          "codex": "Codex env marker"
+        },
+        "ponytail": {
+          "enabled": "Ponytail",
+          "enabledDescription": "Inject lazy-senior-dev rules via PONYTAIL_DEFAULT_MODE in live agent configs",
+          "mode": "Default mode",
+          "installSkill": "Prefer skill install",
+          "installSkillDescription": "Log a reminder to install the Ponytail skill from the Skills page when missing",
+          "skillInstalled": "Ponytail skill installed",
+          "modes": {
+            "lite": "Lite",
+            "full": "Full (default)",
+            "ultra": "Ultra",
+            "off": "Off"
+          }
+        }
+      },
       "logConfig": {
         "title": "Log Management",
         "description": "Control log output level",
