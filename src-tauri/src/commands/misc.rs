@@ -111,8 +111,9 @@ pub struct ToolVersion {
     wsl_distro: Option<String>,
 }
 
-const VALID_TOOLS: [&str; 6] = [
-    "claude", "codex", "gemini", "opencode", "openclaw", "hermes",
+const VALID_TOOLS: [&str; 9] = [
+    "claude", "codex", "gemini", "opencode", "openclaw", "hermes", "ponytail", "rtk",
+    "headroom",
 ];
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -427,6 +428,9 @@ fn tool_display_name(tool: &str) -> &'static str {
         "opencode" => "OpenCode",
         "openclaw" => "OpenClaw",
         "hermes" => "Hermes",
+        "ponytail" => "Pony Tail",
+        "rtk" => "RTK",
+        "headroom" => "Headroom",
         _ => "Unknown",
     }
 }
@@ -449,6 +453,21 @@ const HERMES_INSTALL_UNIX: &str =
     "bash -c 'tmp=$(mktemp) && curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh -o $tmp && bash $tmp; status=$?; rm -f $tmp; exit $status'";
 const HERMES_UPDATE_UNIX: &str =
     "hermes update || bash -c 'tmp=$(mktemp) && curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh -o $tmp && bash $tmp; status=$?; rm -f $tmp; exit $status'";
+
+const RTK_INSTALL_UNIX: &str =
+    "bash -c 'tmp=$(mktemp) && curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh -o $tmp && bash $tmp; status=$?; rm -f $tmp; exit $status'";
+
+const HEADROOM_INSTALL_UNIX: &str = "python3 -m pip install \"headroom-ai[all]\" --upgrade";
+const HEADROOM_UPDATE_UNIX: &str = "python3 -m pip install --upgrade \"headroom-ai[all]\"";
+
+#[cfg(target_os = "windows")]
+const RTK_INSTALL_WINDOWS: &str = "cargo install --git https://github.com/rtk-ai/rtk --force";
+
+#[cfg(target_os = "windows")]
+const HEADROOM_INSTALL_WINDOWS: &str = "py -m pip install \"headroom-ai[all]\" --upgrade";
+
+#[cfg(target_os = "windows")]
+const HEADROOM_UPDATE_WINDOWS: &str = "py -m pip install --upgrade \"headroom-ai[all]\"";
 
 #[cfg(target_os = "windows")]
 const HERMES_INSTALL_WINDOWS_SCRIPT: &str =
@@ -494,6 +513,7 @@ fn npm_install_command_for(tool: &str) -> Option<&'static str> {
         "gemini" => Some("npm i -g @google/gemini-cli@latest"),
         "opencode" => Some("npm i -g opencode-ai@latest"),
         "openclaw" => Some("npm i -g openclaw@latest"),
+        "ponytail" => Some("npm i -g @dietrichgebert/ponytail@latest"),
         _ => None,
     }
 }
@@ -532,6 +552,48 @@ fn tool_action_shell_command_for_shell(
     action: ToolLifecycleAction,
     shell: LifecycleCommandShell,
 ) -> Option<String> {
+    if tool == "rtk" {
+        return Some(match (action, shell) {
+            (ToolLifecycleAction::Install, LifecycleCommandShell::Posix) => RTK_INSTALL_UNIX,
+            (ToolLifecycleAction::Update, LifecycleCommandShell::Posix) => RTK_INSTALL_UNIX,
+            #[cfg(target_os = "windows")]
+            (ToolLifecycleAction::Install, LifecycleCommandShell::WindowsBatch) => {
+                RTK_INSTALL_WINDOWS
+            }
+            #[cfg(target_os = "windows")]
+            (ToolLifecycleAction::Update, LifecycleCommandShell::WindowsBatch) => {
+                RTK_INSTALL_WINDOWS
+            }
+            #[cfg(not(target_os = "windows"))]
+            (_, LifecycleCommandShell::WindowsBatch) => return None,
+        }
+        .to_string());
+    }
+
+    if tool == "headroom" {
+        return Some(
+            match (action, shell) {
+                (ToolLifecycleAction::Install, LifecycleCommandShell::Posix) => {
+                    HEADROOM_INSTALL_UNIX
+                }
+                (ToolLifecycleAction::Update, LifecycleCommandShell::Posix) => {
+                    HEADROOM_UPDATE_UNIX
+                }
+                #[cfg(target_os = "windows")]
+                (ToolLifecycleAction::Install, LifecycleCommandShell::WindowsBatch) => {
+                    HEADROOM_INSTALL_WINDOWS
+                }
+                #[cfg(target_os = "windows")]
+                (ToolLifecycleAction::Update, LifecycleCommandShell::WindowsBatch) => {
+                    HEADROOM_UPDATE_WINDOWS
+                }
+                #[cfg(not(target_os = "windows"))]
+                (_, LifecycleCommandShell::WindowsBatch) => return None,
+            }
+            .to_string(),
+        );
+    }
+
     if tool == "hermes" {
         return Some(
             match (action, shell) {
@@ -728,7 +790,9 @@ async fn get_single_tool_version_impl(
     let client = crate::proxy::http_client::get();
 
     // 1. 获取本地版本
-    let probe = if let Some(distro) = wsl_distro.as_deref() {
+    let probe = if tool == "ponytail" {
+        probe_npm_global_version("@dietrichgebert/ponytail")
+    } else if let Some(distro) = wsl_distro.as_deref() {
         try_get_version_wsl(tool, distro, wsl_shell, wsl_shell_flag)
     } else {
         #[cfg(target_os = "windows")]
@@ -773,6 +837,11 @@ async fn get_single_tool_version_impl(
         }
         "openclaw" => fetch_npm_latest_for_tool(&client, "openclaw", tool, local).await,
         "hermes" => fetch_pypi_latest_version(&client, "hermes-agent").await,
+        "ponytail" => {
+            fetch_npm_latest_for_tool(&client, "@dietrichgebert/ponytail", tool, local).await
+        }
+        "rtk" => fetch_github_latest_version(&client, "rtk-ai/rtk").await,
+        "headroom" => fetch_pypi_latest_version(&client, "headroom-ai").await,
         _ => None,
     };
 
@@ -986,6 +1055,59 @@ enum ShellProbe {
     FoundButFailed(String),
     /// 没找到该命令（携带描述性消息，供 UI 展示）
     NotFound(String),
+}
+
+/// 从 npm 全局包列表探测版本（用于无 CLI 二进制的 npm 插件包，如 ponytail）。
+fn probe_npm_global_version(package: &str) -> ShellProbe {
+    use std::process::Command;
+
+    let output = {
+        #[cfg(target_os = "windows")]
+        {
+            Command::new("cmd")
+                .args(["/C", &format!("npm list -g {package} --depth=0 --json")])
+                .output()
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            let shell = std::env::var("SHELL")
+                .ok()
+                .filter(|s| is_valid_shell(s))
+                .unwrap_or_else(|| "sh".to_string());
+            let flag = default_flag_for_shell(&shell);
+            Command::new(shell)
+                .arg(flag)
+                .arg(format!("npm list -g {package} --depth=0 --json"))
+                .output()
+        }
+    };
+
+    match output {
+        Ok(out) if out.status.success() => {
+            let stdout = decode_command_output(&out.stdout);
+            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&stdout) {
+                let version = json
+                    .get("dependencies")
+                    .and_then(|deps| deps.get(package))
+                    .and_then(|pkg| pkg.get("version"))
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string());
+                if let Some(version) = version {
+                    return ShellProbe::Found(version);
+                }
+            }
+            ShellProbe::NotFound(NOT_INSTALLED.to_string())
+        }
+        Ok(out) => {
+            let stderr = decode_command_output(&out.stderr).trim().to_string();
+            if out.status.code() == Some(127) || stderr.is_empty() {
+                ShellProbe::NotFound(NOT_INSTALLED.to_string())
+            } else {
+                ShellProbe::FoundButFailed(last_lines(stderr.trim(), 4))
+            }
+        }
+        Err(_) => ShellProbe::NotFound(NOT_INSTALLED.to_string()),
+    }
 }
 
 /// 在非 Windows 平台用用户 shell 执行 `{tool} --version` 探测版本。
@@ -1400,7 +1522,7 @@ fn build_tool_search_paths(tool: &str) -> Vec<std::path::PathBuf> {
             &mut search_paths,
             std::path::PathBuf::from("/usr/local/bin"),
         );
-        if tool == "hermes" {
+        if tool == "hermes" || tool == "headroom" {
             let python_base = home.join("Library").join("Python");
             if python_base.exists() {
                 if let Ok(entries) = std::fs::read_dir(&python_base) {
@@ -1428,7 +1550,7 @@ fn build_tool_search_paths(tool: &str) -> Vec<std::path::PathBuf> {
     {
         if let Some(appdata) = dirs::data_dir() {
             push_unique_path(&mut search_paths, appdata.join("npm"));
-            if tool == "hermes" {
+            if tool == "hermes" || tool == "headroom" {
                 let python_base = appdata.join("Python");
                 if python_base.exists() {
                     if let Ok(entries) = std::fs::read_dir(&python_base) {
@@ -1442,7 +1564,7 @@ fn build_tool_search_paths(tool: &str) -> Vec<std::path::PathBuf> {
                 }
             }
         }
-        if tool == "hermes" {
+        if tool == "hermes" || tool == "headroom" {
             if let Some(local_data) = dirs::data_local_dir() {
                 let programs_python = local_data.join("Programs").join("Python");
                 if programs_python.exists() {
@@ -1814,6 +1936,7 @@ fn npm_package_for(tool: &str) -> Option<&'static str> {
         "gemini" => Some("@google/gemini-cli"),
         "opencode" => Some("opencode-ai"),
         "openclaw" => Some("openclaw"),
+        "ponytail" => Some("@dietrichgebert/ponytail"),
         _ => None,
     }
 }
@@ -2129,6 +2252,17 @@ fn package_manager_anchored_command_from_paths(
 fn anchored_command_from_paths(tool: &str, bin_path: &str, real_target: &str) -> Option<String> {
     let real_lower = real_target.to_ascii_lowercase();
 
+    if tool == "headroom" {
+        if infer_install_source(Path::new(bin_path)) == "pip" {
+            let python = sibling_bin(bin_path, "python3")
+                .or_else(|| sibling_bin(bin_path, "python"))?;
+            return Some(format!(
+                "{} -m pip install --upgrade \"headroom-ai[all]\"",
+                quote_path_if_spaced(&python)
+            ));
+        }
+        return None;
+    }
     if tool == "hermes" {
         return anchored_official_update_command(tool, bin_path);
     }
@@ -2212,6 +2346,16 @@ fn package_manager_anchored_command_from_paths(tool: &str, bin_path: &str) -> Op
 /// 才返 None 让上游兜回静态命令、`anchored=false`。
 #[cfg(target_os = "windows")]
 fn anchored_command_from_paths(tool: &str, bin_path: &str, _real_target: &str) -> Option<String> {
+    if tool == "headroom" {
+        if infer_install_source(Path::new(bin_path)) == "pip" {
+            let python = sibling_bin_with_ext(bin_path, "python", &["exe"])?;
+            return Some(format!(
+                "{} -m pip install --upgrade \"headroom-ai[all]\"",
+                win_quote_path_for_batch(&python)
+            ));
+        }
+        return None;
+    }
     if tool == "hermes" {
         return anchored_official_update_command(tool, bin_path);
     }
@@ -2312,6 +2456,7 @@ fn posix_install_command_for(tool: &str) -> String {
         "claude" => installer_with_npm_fallback(CLAUDE_INSTALL_UNIX, tool),
         "opencode" => installer_with_npm_fallback(OPENCODE_INSTALL_UNIX, tool),
         "hermes" => HERMES_INSTALL_UNIX.to_string(),
+        "rtk" => RTK_INSTALL_UNIX.to_string(),
         _ => static_fallback_command_for(tool, ToolLifecycleAction::Install),
     }
 }
@@ -4632,6 +4777,44 @@ mod tests {
             assert!(
                 !fallback.contains('|') && !cmd.contains("python") && !cmd.contains("pip"),
                 "should not depend on pipefail or system Python/pip: {cmd}"
+            );
+        }
+
+        #[test]
+        fn ponytail_install_keeps_static_npm() {
+            let cmd = install_command_for("ponytail");
+            assert_eq!(cmd, "npm i -g @dietrichgebert/ponytail@latest");
+        }
+
+        #[test]
+        fn rtk_install_uses_official_installer() {
+            let cmd = install_command_for("rtk");
+            assert!(
+                cmd.contains("https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh"),
+                "should use official installer: {cmd}"
+            );
+            assert!(!cmd.contains('|'), "native installer should avoid pipe: {cmd}");
+        }
+
+        #[test]
+        fn headroom_install_uses_pip() {
+            let cmd = install_command_for("headroom");
+            assert_eq!(
+                cmd,
+                "python3 -m pip install \"headroom-ai[all]\" --upgrade"
+            );
+        }
+
+        #[test]
+        fn new_tool_update_fallbacks() {
+            assert_eq!(
+                static_fallback_command("ponytail"),
+                "npm i -g @dietrichgebert/ponytail@latest"
+            );
+            assert_eq!(static_fallback_command("rtk"), RTK_INSTALL_UNIX);
+            assert_eq!(
+                static_fallback_command("headroom"),
+                "python3 -m pip install --upgrade \"headroom-ai[all]\""
             );
         }
     }
