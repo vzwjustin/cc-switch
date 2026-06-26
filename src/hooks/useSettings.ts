@@ -270,18 +270,6 @@ export function useSettings(): UseSettingsResult {
           prevPluginEnabled,
         );
 
-        // 持久化语言偏好
-        try {
-          if (typeof window !== "undefined" && updates.language) {
-            window.localStorage.setItem("language", updates.language);
-          }
-        } catch (error) {
-          console.warn(
-            "[useSettings] Failed to persist language preference",
-            error,
-          );
-        }
-
         // 更新托盘菜单
         try {
           await providersApi.updateTrayMenu();
@@ -404,17 +392,6 @@ export function useSettings(): UseSettingsResult {
           payload.enableClaudePluginIntegration,
           prevPluginEnabled,
         );
-
-        try {
-          if (typeof window !== "undefined" && payload.language) {
-            window.localStorage.setItem("language", payload.language);
-          }
-        } catch (error) {
-          console.warn(
-            "[useSettings] Failed to persist language preference",
-            error,
-          );
-        }
 
         try {
           await providersApi.updateTrayMenu();

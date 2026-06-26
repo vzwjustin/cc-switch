@@ -92,10 +92,10 @@ const createSettingsFormMock = (overrides: Record<string, unknown> = {}) => ({
     geminiConfigDir: "/gemini",
     opencodeConfigDir: "/opencode",
     openclawConfigDir: "/openclaw",
-    language: "zh",
+    language: "en",
   },
   isLoading: false,
-  initialLanguage: "zh",
+  initialLanguage: "en",
   updateSettings: vi.fn(),
   resetSettings: vi.fn(),
   syncLanguage: vi.fn(),
@@ -161,7 +161,7 @@ describe("useSettings hook", () => {
       geminiConfigDir: "/server/gemini",
       opencodeConfigDir: "/server/opencode",
       openclawConfigDir: "/server/openclaw",
-      language: "zh",
+      language: "en",
     };
 
     useSettingsQueryMock.mockReturnValue({
@@ -172,7 +172,7 @@ describe("useSettings hook", () => {
     settingsFormMock = createSettingsFormMock({
       settings: {
         ...serverSettings,
-        language: "zh",
+        language: "en",
       },
     });
     directorySettingsMock = createDirectorySettingsMock();
@@ -203,7 +203,7 @@ describe("useSettings hook", () => {
     settingsFormMock = createSettingsFormMock({
       settings: {
         ...serverSettings,
-        language: "zh",
+        language: "en",
         skipClaudeOnboarding: false,
       },
     });
@@ -231,7 +231,7 @@ describe("useSettings hook", () => {
     settingsFormMock = createSettingsFormMock({
       settings: {
         ...serverSettings,
-        language: "zh",
+        language: "en",
         skipClaudeOnboarding: true,
       },
     });
@@ -299,7 +299,6 @@ describe("useSettings hook", () => {
       official: false,
     });
     expect(metadataMock.setRequiresRestart).toHaveBeenCalledWith(true);
-    expect(window.localStorage.getItem("language")).toBe("en");
     expect(toastErrorMock).not.toHaveBeenCalled();
     // 插件同步已包含 syncCurrentProvidersLiveSafe，目录变更不再重复调用
     expect(syncCurrentProvidersLiveMock).toHaveBeenCalledTimes(1);
@@ -322,9 +321,9 @@ describe("useSettings hook", () => {
         ...serverSettings,
         enableClaudePluginIntegration: false, // 状态未变
         launchOnStartup: false, // 状态未变
-        language: "zh",
+        language: "en",
       },
-      initialLanguage: "zh",
+      initialLanguage: "en",
     });
 
     directorySettingsMock = createDirectorySettingsMock({
@@ -363,7 +362,7 @@ describe("useSettings hook", () => {
       settings: {
         ...serverSettings,
         enableClaudePluginIntegration: true, // 状态改变
-        language: "zh",
+        language: "en",
       },
     });
     directorySettingsMock = createDirectorySettingsMock({
@@ -381,7 +380,7 @@ describe("useSettings hook", () => {
 
     expect(toastErrorMock).toHaveBeenCalled();
     const message = toastErrorMock.mock.calls.at(-1)?.[0] as string;
-    expect(message).toContain("同步 Claude 插件失败");
+    expect(message).toContain("Sync Claude plugin failed");
     expect(metadataMock.setRequiresRestart).toHaveBeenCalledWith(true);
   });
 
@@ -402,7 +401,7 @@ describe("useSettings hook", () => {
       settings: {
         ...serverSettings,
         enableClaudePluginIntegration: false,
-        language: "zh",
+        language: "en",
       },
     });
     directorySettingsMock = createDirectorySettingsMock();
@@ -429,7 +428,7 @@ describe("useSettings hook", () => {
       ...serverSettings,
       claudeConfigDir: "  /server/claude  ",
       codexConfigDir: "   ",
-      language: "zh",
+      language: "en",
     };
     useSettingsQueryMock.mockReturnValue({
       data: serverSettings,
@@ -439,9 +438,9 @@ describe("useSettings hook", () => {
     settingsFormMock = createSettingsFormMock({
       settings: {
         ...serverSettings,
-        language: "zh",
+        language: "en",
       },
-      initialLanguage: "zh",
+      initialLanguage: "en",
     });
     directorySettingsMock = createDirectorySettingsMock();
 

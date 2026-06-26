@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom";
 import { afterAll, afterEach, beforeAll, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
+import en from "../src/i18n/locales/en.json";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { server } from "./msw/server";
@@ -10,11 +11,10 @@ import "./msw/tauriMocks";
 beforeAll(async () => {
   server.listen({ onUnhandledRequest: "warn" });
   await i18n.use(initReactI18next).init({
-    lng: "zh",
-    fallbackLng: "zh",
+    lng: "en",
+    fallbackLng: "en",
     resources: {
-      zh: { translation: {} },
-      en: { translation: {} },
+      en: { translation: en },
     },
     interpolation: {
       escapeValue: false,
