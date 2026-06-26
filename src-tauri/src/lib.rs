@@ -6,6 +6,7 @@ mod claude_mcp;
 mod claude_plugin;
 mod codex_config;
 mod codex_history_migration;
+mod companion_tools;
 mod commands;
 mod config;
 mod database;
@@ -1365,6 +1366,9 @@ pub fn run() {
             commands::get_tool_versions,
             commands::run_tool_lifecycle_action,
             commands::probe_tool_installations,
+            commands::get_companion_tools_status,
+            commands::install_companion_tool,
+            commands::uninstall_companion_tool,
             // Provider terminal
             commands::open_provider_terminal,
             // Universal Provider management

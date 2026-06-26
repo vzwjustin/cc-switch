@@ -1602,6 +1602,27 @@
     "officialDescription": "官方登录，不需要填写 API Key",
     "presetDescription": "使用预设配置，只需填写 API Key"
   },
+  "companionTools": {
+    "title": "伴侣工具",
+    "description": "将省 token 的伴侣工具安装到 Claude Code、Codex、Gemini CLI 和 OpenCode。",
+    "homepage": "打开主页",
+    "installSuccess": "已为 {{app}} 安装 {{tool}}",
+    "uninstallSuccess": "已从 {{app}} 移除 {{tool}}",
+    "tools": {
+      "ponytail": {
+        "name": "Pony Tail",
+        "description": "坚持 YAGNI 的插件，减少过度设计和 token 浪费。"
+      },
+      "rtk": {
+        "name": "RTK",
+        "description": "在命令输出进入编码代理前进行压缩。"
+      },
+      "headroom": {
+        "name": "Headroom",
+        "description": "压缩 LLM 上下文以节省 token，同时保持回答质量。"
+      }
+    }
+  },
   "mcp": {
     "title": "MCP 管理",
     "import": "导入",

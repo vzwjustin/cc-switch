@@ -1602,6 +1602,27 @@
     "officialDescription": "Official login, no API Key required",
     "presetDescription": "Use preset configuration, only API Key required"
   },
+  "companionTools": {
+    "title": "Companion Tools",
+    "description": "Install token-saving companion tools into Claude Code, Codex, Gemini CLI, and OpenCode.",
+    "homepage": "Open homepage",
+    "installSuccess": "Installed {{tool}} for {{app}}",
+    "uninstallSuccess": "Removed {{tool}} from {{app}}",
+    "tools": {
+      "ponytail": {
+        "name": "Pony Tail",
+        "description": "YAGNI-first plugin that cuts over-engineering and token waste."
+      },
+      "rtk": {
+        "name": "RTK",
+        "description": "Compresses shell output before it reaches your coding agent."
+      },
+      "headroom": {
+        "name": "Headroom",
+        "description": "Compresses LLM context to save tokens without changing answers."
+      }
+    }
+  },
   "mcp": {
     "title": "MCP Management",
     "import": "Import",

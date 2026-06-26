@@ -1602,6 +1602,27 @@
     "officialDescription": "公式ログイン。API Key 不要",
     "presetDescription": "プリセットを使用。API Key だけ入力すれば OK"
   },
+  "companionTools": {
+    "title": "コンパニオンツール",
+    "description": "トークン節約用のコンパニオンツールを Claude Code、Codex、Gemini CLI、OpenCode にインストールします。",
+    "homepage": "ホームページを開く",
+    "installSuccess": "{{app}} に {{tool}} をインストールしました",
+    "uninstallSuccess": "{{app}} から {{tool}} を削除しました",
+    "tools": {
+      "ponytail": {
+        "name": "Pony Tail",
+        "description": "YAGNI 優先のプラグインで、過剰設計とトークン浪費を抑えます。"
+      },
+      "rtk": {
+        "name": "RTK",
+        "description": "シェル出力をコーディングエージェントに渡す前に圧縮します。"
+      },
+      "headroom": {
+        "name": "Headroom",
+        "description": "回答品質を保ちながら LLM コンテキストを圧縮してトークンを節約します。"
+      }
+    }
+  },
   "mcp": {
     "title": "MCP 管理",
     "import": "インポート",
