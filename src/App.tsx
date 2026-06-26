@@ -58,6 +58,7 @@ import {
   DRAG_REGION_STYLE,
 } from "@/lib/platform";
 import { AppSwitcher } from "@/components/AppSwitcher";
+import { AppNavButton } from "@/components/layout/AppNavButton";
 import { ProviderList } from "@/components/providers/ProviderList";
 import { AddProviderDialog } from "@/components/providers/AddProviderDialog";
 import { EditProviderDialog } from "@/components/providers/EditProviderDialog";
@@ -255,8 +256,6 @@ function App() {
   // 这里 enabled 默认 false，仅用于「导入」按钮的绿点提示，不主动发起扫描。
   const { data: unmanagedSkills } = useScanUnmanagedSkills();
   const hasUnmanagedSkills = (unmanagedSkills?.length ?? 0) > 0;
-  const addActionButtonClass =
-    "bg-orange-500 hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 dark:shadow-orange-500/40 rounded-full w-8 h-8";
 
   const {
     isRunning: isProxyRunning,
@@ -950,8 +949,8 @@ function App() {
           return <AgentsDefaultsPanel />;
         default:
           return (
-            <div className="px-6 flex flex-col flex-1 min-h-0 overflow-hidden">
-              <div className="flex-1 overflow-y-auto overflow-x-hidden pb-12 px-1">
+            <div className="app-content flex flex-col flex-1 min-h-0 overflow-hidden pt-4">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden pb-12">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeApp}
@@ -1035,7 +1034,7 @@ function App() {
 
   return (
     <div
-      className="flex flex-col h-screen overflow-hidden bg-background text-foreground selection:bg-primary/30 pb-4"
+      className="app-shell flex flex-col h-screen overflow-hidden text-foreground selection:bg-primary/30"
       style={{ overflowX: "hidden", paddingTop: contentTopOffset }}
     >
       {(dragBarHeight > 0 || useAppWindowControls) && (
@@ -1114,7 +1113,7 @@ function App() {
       )}
 
       <header
-        className="fixed z-50 w-full transition-all duration-300 bg-background/80 backdrop-blur-md"
+        className="app-header fixed z-50 w-full transition-all duration-300"
         {...DRAG_REGION_ATTR}
         style={
           {
@@ -1180,10 +1179,10 @@ function App() {
                     target="_blank"
                     rel="noreferrer"
                     className={cn(
-                      "text-xl font-semibold transition-colors",
+                      "text-xl font-semibold tracking-tight transition-colors",
                       isProxyRunning && isCurrentAppTakeoverActive
-                        ? "text-emerald-500 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300"
-                        : "text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300",
+                        ? "text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+                        : "text-primary hover:text-primary/80",
                     )}
                   >
                     CC Switch
@@ -1197,7 +1196,6 @@ function App() {
                     setCurrentView("settings");
                   }}
                   title={t("common.settings")}
-                  className="hover:bg-black/5 dark:hover:bg-white/5"
                 >
                   <Settings className="w-4 h-4" />
                 </Button>
@@ -1216,9 +1214,8 @@ function App() {
                       setCurrentView("settings");
                     }}
                     title={t("usage.title", {
-                      defaultValue: "使用统计",
+                      defaultValue: "Usage",
                     })}
-                    className="hover:bg-black/5 dark:hover:bg-white/5"
                   >
                     <BarChart2 className="w-4 h-4" />
                   </Button>
@@ -1374,7 +1371,7 @@ function App() {
                       compact={isToolbarCompact}
                     />
 
-                    <div className="flex items-center gap-1 p-1 bg-muted rounded-xl">
+                    <div className="app-toolbar">
                       <AnimatePresence mode="wait">
                         <motion.div
                           key={
@@ -1384,7 +1381,7 @@ function App() {
                                 ? "hermes"
                                 : "default"
                           }
-                          className="flex items-center gap-1"
+                          className="flex items-center gap-0.5"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
@@ -1392,141 +1389,104 @@ function App() {
                         >
                           {activeApp === "hermes" ? (
                             <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
+                              <AppNavButton
+                                compact={isToolbarCompact}
+                                active={false}
+                                label={t("skills.manage")}
+                                icon={<Wrench className="h-4 w-4" />}
                                 onClick={() => setCurrentView("skills")}
-                                className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
-                                title={t("skills.manage")}
-                              >
-                                <Wrench className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
+                              />
+                              <AppNavButton
+                                compact={isToolbarCompact}
+                                active={false}
+                                label={t("hermes.memory.title")}
+                                icon={<Brain className="h-4 w-4" />}
                                 onClick={() => setCurrentView("hermesMemory")}
-                                className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
-                                title={t("hermes.memory.title")}
-                              >
-                                <Brain className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
+                              />
+                              <AppNavButton
+                                compact={isToolbarCompact}
+                                label={t("hermes.webui.open")}
+                                icon={<LayoutDashboard className="h-4 w-4" />}
                                 onClick={() => void openHermesWebUI()}
-                                className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
-                                title={t("hermes.webui.open")}
-                              >
-                                <LayoutDashboard className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
+                              />
+                              <AppNavButton
+                                compact={isToolbarCompact}
+                                active={false}
+                                label={t("mcp.title")}
+                                icon={<McpIcon size={16} />}
                                 onClick={() => setCurrentView("mcp")}
-                                className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
-                                title={t("mcp.title")}
-                              >
-                                <McpIcon size={16} />
-                              </Button>
+                              />
                             </>
                           ) : activeApp === "openclaw" ? (
                             <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
+                              <AppNavButton
+                                compact={isToolbarCompact}
+                                active={false}
+                                label={t("workspace.manage")}
+                                icon={<FolderOpen className="h-4 w-4" />}
                                 onClick={() => setCurrentView("workspace")}
-                                className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
-                                title={t("workspace.manage")}
-                              >
-                                <FolderOpen className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
+                              />
+                              <AppNavButton
+                                compact={isToolbarCompact}
+                                active={false}
+                                label={t("openclaw.env.title")}
+                                icon={<KeyRound className="h-4 w-4" />}
                                 onClick={() => setCurrentView("openclawEnv")}
-                                className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
-                                title={t("openclaw.env.title")}
-                              >
-                                <KeyRound className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
+                              />
+                              <AppNavButton
+                                compact={isToolbarCompact}
+                                active={false}
+                                label={t("openclaw.tools.title")}
+                                icon={<Shield className="h-4 w-4" />}
                                 onClick={() => setCurrentView("openclawTools")}
-                                className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
-                                title={t("openclaw.tools.title")}
-                              >
-                                <Shield className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
+                              />
+                              <AppNavButton
+                                compact={isToolbarCompact}
+                                active={false}
+                                label={t("openclaw.agents.title")}
+                                icon={<Cpu className="h-4 w-4" />}
                                 onClick={() => setCurrentView("openclawAgents")}
-                                className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
-                                title={t("openclaw.agents.title")}
-                              >
-                                <Cpu className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
+                              />
+                              <AppNavButton
+                                compact={isToolbarCompact}
+                                active={false}
+                                label={t("sessionManager.title")}
+                                icon={<History className="h-4 w-4" />}
                                 onClick={() => setCurrentView("sessions")}
-                                className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
-                                title={t("sessionManager.title")}
-                              >
-                                <History className="w-4 h-4" />
-                              </Button>
+                              />
                             </>
                           ) : (
                             <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
+                              <AppNavButton
+                                compact={isToolbarCompact}
+                                hidden={!hasSkillsSupport}
+                                active={false}
+                                label={t("skills.manage")}
+                                icon={<Wrench className="h-4 w-4" />}
                                 onClick={() => setCurrentView("skills")}
-                                className={cn(
-                                  "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5",
-                                  "transition-all duration-200 ease-in-out overflow-hidden",
-                                  hasSkillsSupport
-                                    ? "opacity-100 w-8 scale-100 px-2"
-                                    : "opacity-0 w-0 scale-75 pointer-events-none px-0 -ml-1",
-                                )}
-                                title={t("skills.manage")}
-                              >
-                                <Wrench className="flex-shrink-0 w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
+                              />
+                              <AppNavButton
+                                compact={isToolbarCompact}
+                                active={false}
+                                label={t("prompts.manage")}
+                                icon={<Book className="h-4 w-4" />}
                                 onClick={() => setCurrentView("prompts")}
-                                className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
-                                title={t("prompts.manage")}
-                              >
-                                <Book className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
+                              />
+                              <AppNavButton
+                                compact={isToolbarCompact}
+                                hidden={!hasSessionSupport}
+                                active={false}
+                                label={t("sessionManager.title")}
+                                icon={<History className="h-4 w-4" />}
                                 onClick={() => setCurrentView("sessions")}
-                                className={cn(
-                                  "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5",
-                                  "transition-all duration-200 ease-in-out overflow-hidden",
-                                  hasSessionSupport
-                                    ? "opacity-100 w-8 scale-100 px-2"
-                                    : "opacity-0 w-0 scale-75 pointer-events-none px-0 -ml-1",
-                                )}
-                                title={t("sessionManager.title")}
-                              >
-                                <History className="flex-shrink-0 w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
+                              />
+                              <AppNavButton
+                                compact={isToolbarCompact}
+                                active={false}
+                                label={t("mcp.title")}
+                                icon={<McpIcon size={16} />}
                                 onClick={() => setCurrentView("mcp")}
-                                className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
-                                title={t("mcp.title")}
-                              >
-                                <McpIcon size={16} />
-                              </Button>
+                              />
                             </>
                           )}
                         </motion.div>
@@ -1536,7 +1496,7 @@ function App() {
                     <Button
                       onClick={() => setIsAddOpen(true)}
                       size="icon"
-                      className={`ml-2 ${addActionButtonClass}`}
+                      className="ml-2 h-9 w-9 rounded-full shadow-md shadow-primary/25"
                     >
                       <Plus className="w-5 h-5" />
                     </Button>
@@ -1548,7 +1508,7 @@ function App() {
         </div>
       </header>
 
-      <main className="flex-1 min-h-0 flex flex-col overflow-y-auto animate-fade-in">
+      <main className="flex-1 min-h-0 flex flex-col overflow-y-auto animate-fade-in pb-6">
         {isOpenClawView && openclawHealthWarnings.length > 0 && (
           <OpenClawHealthBanner warnings={openclawHealthWarnings} />
         )}

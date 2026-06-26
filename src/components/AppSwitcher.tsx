@@ -67,7 +67,7 @@ export function AppSwitcher({
   });
 
   return (
-    <div className="inline-flex bg-muted rounded-xl p-1 gap-1">
+    <div className="app-toolbar">
       {appsToShow.map((app) => {
         const badgeConfig = APP_BADGE_ICON[app];
         const BadgeIcon = badgeConfig?.icon;
@@ -78,10 +78,10 @@ export function AppSwitcher({
             type="button"
             onClick={() => handleSwitch(app)}
             className={cn(
-              "group inline-flex items-center px-3 h-8 rounded-md text-sm font-medium transition-all duration-200",
+              "group inline-flex items-center rounded-lg px-2.5 h-8 text-sm font-medium transition-all duration-200",
               isActive
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground hover:bg-background/50",
+                ? "bg-background text-foreground shadow-sm ring-1 ring-border/60"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent/80",
             )}
           >
             <span className="relative inline-flex shrink-0">
